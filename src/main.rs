@@ -13,14 +13,15 @@ fn main() {
     
     const M: usize = 2;
     let stdev: f32 = standard_deviation(&vital_file_test.sbp);
-    let R: f32 = stdev*0.2;
-
+    let r: f32 = stdev*0.2;
+    let data: Vec<f32> = vital_file_test.sbp.clone();
     let start = Instant::now();
-    println!("{:?}", sample_entropy(M, R, &vital_file_test.sbp));
+    let data: Vec<f32> = detrend_data(data);
+    let this_samp_en = sample_entropy(M, r, &data);
     let duration = start.elapsed();
+    println!("{:?}", data);
+    println!("{:?}", this_samp_en);
     println!("{:?}", duration);
-    println!("{:?}", mean(&vital_file_test.sbp));
-    println!("{:?}", standard_deviation(&vec![1.0, 2.0, 3.0]));
 }
 
 /// Constructs the template vectors for a given time series.
@@ -114,6 +115,54 @@ fn standard_deviation(data: &Vec<f32>) -> f32 {
     let xbar: f32 = mean(data);
     let squared_err: Vec<f32> = data.iter().map(|x| (x - xbar).powf(2.0)).collect();
     return ((squared_err.iter().sum::<f32>())/((data.len() as f32))).sqrt();
+}
+
+/// Detrends the data via a linear detrending.
+/// 
+/// Fits an ordinary least squares regression line to the data, then subtracts
+/// the estimation from the model to detrend the data. This is done at the
+/// suggestion of the 1994 paper by Pincus, S.M.; Goldberger, A.L. titled:
+/// "Physiological time-series analysis: what does regularity quantify?"
+///
+/// The line in which 'denominator' is created needs some explanation. The x
+/// values for this linear regression are always 1, 2, ..., len(data). The
+/// denominator for the estimation of beta is the sum of squares of the x
+/// inputs. A cool bit of math wizardry actually shows that there is a closed
+/// form expression for this that doesn't rely on the data itself.
+///
+/// # Arguments
+/// `data` - a mutable reference to the waveform data.
+///
+fn detrend_data(data: Vec<f32>) -> Vec<f32> {
+    let xbar: f32 = ((data.len() as f32)+1.0)/2.0;
+    let ybar: f32 = mean(&data);
+    let beta_hat: f32 = {
+        let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
+        let numerator: f32 = data_enum
+            .iter()
+            .map(|(x, y)| ((*x as f32)+1.0-xbar)*(*y-ybar))
+            .collect::<Vec<_>>()
+            .into_iter()
+            .sum::<f32>();
+        let n: f32 = data.len() as f32;
+        let denominator: f32 = data_enum
+            .iter()
+            .map(|(x, y)| ((*x as f32)+1.0-xbar).powf(2.0))
+            .collect::<Vec<_>>()
+            .into_iter()
+            .sum::<f32>();
+        numerator/denominator 
+    };
+    let alpha_hat: f32 = &ybar - &beta_hat*&xbar;
+    
+    let detrended_data = {
+        let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
+        data_enum
+            .iter()
+            .map(|(ix, val)| *val - &alpha_hat - (&beta_hat*((*ix as f32)+1.0)))
+            .collect::<Vec<f32>>()
+    };
+    return detrended_data
 }
 
 /// Vital file struct for holding the data.
