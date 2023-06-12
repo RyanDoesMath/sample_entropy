@@ -1,7 +1,7 @@
 use std::error::Error;
 use csv;
 
-use std::time::{Duration, Instant};
+use std::time::{Instant};
 
 fn main() {
     const M: usize = 2;
@@ -31,7 +31,7 @@ fn construct_templates(m: usize, data: &Vec<f32>) -> Vec<Vec<f32>> {
     let mut templates: Vec<Vec<f32>> = Vec::new();
     let mut new_template: Vec<f32>;
     for i in m..data.len()+1 {
-        let mut new_template: Vec<f32> = Vec::new();
+        new_template = Vec::new();
         for j in (i-m)..i {
             new_template.push(data[j]);
         }
@@ -49,7 +49,6 @@ fn construct_templates(m: usize, data: &Vec<f32>) -> Vec<Vec<f32>> {
 ///
 fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
     let mut matches: u32 = 0;
-    let mut distance: f32;
     
     for i in 0..templates.len() {
         for j in i+1..templates.len() {
@@ -103,7 +102,7 @@ fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
 }
 
 /// Vital file struct for holding the data.
-pub struct Vital_File {
+pub struct VitalFile {
     name: String,
     sbp: Vec<f32>,
     mbp: Vec<f32>,
@@ -120,7 +119,7 @@ pub struct Vital_File {
 /// * `path` - a reference to a string filepath to a csv file.
 /// 
 
-fn read_csv(path: &str) -> Result<Vital_File, Box<dyn Error>> {
+fn read_csv(path: &str) -> Result<VitalFile, Box<dyn Error>> {
     // Read data from path.
     let mut reader = csv::Reader::from_path(path)?;
 
@@ -144,7 +143,7 @@ fn read_csv(path: &str) -> Result<Vital_File, Box<dyn Error>> {
         diastolic_blood_pressures.push(dbp);
     }
 
-    let new_vital_file = Vital_File{
+    let new_vital_file = VitalFile{
         name: record_names[0].clone(),
         sbp: systolic_blood_pressures,
         mbp: mean_blood_pressures,
