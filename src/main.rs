@@ -109,10 +109,11 @@ fn mean(data: &Vec<f32>) -> f32 {
     data.iter().sum::<f32>() as f32 / data.len() as f32
 }
 
+/// Vectorized read-only code that computes standard deviation.
 fn standard_deviation(data: &Vec<f32>) -> f32 {
     let xbar: f32 = mean(data);
     let squared_err: Vec<f32> = data.iter().map(|x| (x - xbar).powf(2.0)).collect();
-    return ((squared_err.iter().sum::<f32>())/((data.len() as f32)-1.0)).sqrt();
+    return ((squared_err.iter().sum::<f32>())/((data.len() as f32))).sqrt();
 }
 
 /// Vital file struct for holding the data.
