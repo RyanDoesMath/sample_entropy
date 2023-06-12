@@ -4,20 +4,23 @@ use csv;
 use std::time::{Instant};
 
 fn main() {
-    const M: usize = 2;
-    const R: f32 = 0.2;
-
     let vital_file_result = read_csv("D:/datasets/vitaldb_individual_csvs/0001.csv");
 
-    let start = Instant::now();
     let vital_file_test = match vital_file_result {
         Ok(result) => result,
         Err(error) => panic!("Problem opening the csv file: {:?}", error),
     };
-    let duration = start.elapsed();
+    
+    const M: usize = 2;
+    let stdev: f32 = standard_deviation(&vital_file_test.sbp);
+    let R: f32 = stdev*0.2;
 
+    let start = Instant::now();
     println!("{:?}", sample_entropy(M, R, &vital_file_test.sbp));
+    let duration = start.elapsed();
     println!("{:?}", duration);
+    println!("{:?}", mean(&vital_file_test.sbp));
+    println!("{:?}", standard_deviation(&vec![1.0, 2.0, 3.0]));
 }
 
 /// Constructs the template vectors for a given time series.
@@ -99,6 +102,18 @@ fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
     let ratio: f32= length_m_plus_1_template_matches/length_m_template_matches;
     let sampen: f32 = -(ratio).ln();
     return sampen;
+}
+
+/// Vectorized one liner for computing the mean of a vector.
+fn mean(data: &Vec<f32>) -> f32 {
+    data.iter().sum::<f32>() as f32 / data.len() as f32
+}
+
+/// Vectorized read-only code that computes standard deviation.
+fn standard_deviation(data: &Vec<f32>) -> f32 {
+    let xbar: f32 = mean(data);
+    let squared_err: Vec<f32> = data.iter().map(|x| (x - xbar).powf(2.0)).collect();
+    return ((squared_err.iter().sum::<f32>())/((data.len() as f32))).sqrt();
 }
 
 /// Vital file struct for holding the data.
