@@ -99,7 +99,7 @@ fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
     let templates_size_m_plus_1: Vec<Vec<f32>> = construct_templates(m_plus_one, &data);
     let length_m_template_matches: f32 = get_matches(&templates_size_m, &r) as f32;
     let length_m_plus_1_template_matches: f32 = get_matches(&templates_size_m_plus_1, &r) as f32;
-    let ratio: f32= length_m_plus_1_template_matches/length_m_template_matches;
+    let ratio: f32 = length_m_plus_1_template_matches/length_m_template_matches;
     let sampen: f32 = -(ratio).ln();
     return sampen;
 }
