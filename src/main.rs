@@ -5,16 +5,19 @@ use std::time::{Duration, Instant};
 
 fn main() {
     const M: usize = 2;
-    const R: f32 = 1.5;
-    let mut data: Vec<f32> = Vec::new();
-    for i in 1..3000 {
-        data.push(i as f32);
-    }
+    const R: f32 = 0.2;
+
+    let vital_file_result = read_csv("D:/datasets/vitaldb_individual_csvs/0001.csv");
+
     let start = Instant::now();
-    let sampen: f32 = sample_entropy(M, R, &data);
+    let vital_file_test = match vital_file_result {
+        Ok(result) => result,
+        Err(error) => panic!("Problem opening the csv file: {:?}", error),
+    };
     let duration = start.elapsed();
-    println!("Sample Entropy: {sampen}");
-    println!("Ran in {:?} seconds.", duration);
+
+    println!("{:?}", sample_entropy(M, R, &vital_file_test.sbp));
+    println!("{:?}", duration);
 }
 
 /// Constructs the template vectors for a given time series.
@@ -99,37 +102,54 @@ fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
     return sampen;
 }
 
-/// Reads waveform data from a file in to a vector.
-///
-/// This is unused for now. Going to rewrite in a much more general way.
+/// Vital file struct for holding the data.
+pub struct Vital_File {
+    name: String,
+    sbp: Vec<f32>,
+    mbp: Vec<f32>,
+    dbp: Vec<f32>,
+}
 
-fn read_csv(path: &str) -> Result<Vec<i32>, Box<dyn Error>> {
+/// Reads waveform data from a file into a vector.
+/// 
+/// Due to waves being different length, they cannot be put into a single csv
+/// file without doing awkward things. For convenience, csv files for each
+/// vital filename was made. The vital_file struct holds this data.
+/// 
+/// # Arguments
+/// * `path` - a reference to a string filepath to a csv file.
+/// 
+
+fn read_csv(path: &str) -> Result<Vital_File, Box<dyn Error>> {
     // Read data from path.
     let mut reader = csv::Reader::from_path(path)?;
 
     // Initialize vectors.
     let mut record_names: Vec<String> = vec![];
-    let mut mean_blood_pressures: Vec<i32> = vec![];
-    let mut systolic_blood_pressures: Vec<i32> = vec![];
-    let mut diastolic_blood_pressures: Vec<i32> = vec![];
-    let mut this_name: &str = "";
-    let mut last_name: &str = "";
+    let mut mean_blood_pressures: Vec<f32> = vec![];
+    let mut systolic_blood_pressures: Vec<f32> = vec![];
+    let mut diastolic_blood_pressures: Vec<f32> = vec![];
     // Read the values into the arrays.
     for result in reader.records() {
         let record = result?;
-        this_name = &record[0];
 
         let name = &record[0];
-        let mbp = record[1].parse::<f32>()? as i32;
-        let sbp = record[2].parse::<f32>()? as i32;
-        let dbp = record[3].parse::<f32>()? as i32;
+        let mbp = record[1].parse::<f32>()?;
+        let sbp = record[2].parse::<f32>()?;
+        let dbp = record[3].parse::<f32>()?;
         
-        record_names.push(name.to_owned());
-        mean_blood_pressures.push(mbp.to_owned());
-        systolic_blood_pressures.push(sbp.to_owned());
-        diastolic_blood_pressures.push(dbp.to_owned());
-
-        last_name = &record[0];
+        record_names.push(name.to_string());
+        mean_blood_pressures.push(mbp);
+        systolic_blood_pressures.push(sbp);
+        diastolic_blood_pressures.push(dbp);
     }
-    Ok(mean_blood_pressures)
+
+    let new_vital_file = Vital_File{
+        name: record_names[0].clone(),
+        sbp: systolic_blood_pressures,
+        mbp: mean_blood_pressures,
+        dbp: diastolic_blood_pressures,
+    };
+
+    Ok(new_vital_file)
 }
