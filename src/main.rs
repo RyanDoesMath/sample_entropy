@@ -154,6 +154,7 @@ fn standard_deviation(data: &Vec<f32>) -> f32 {
 fn detrend_data(data: Vec<f32>) -> Vec<f32> {
     let xbar: f32 = ((data.len() as f32)+1.0)/2.0;
     let ybar: f32 = mean(&data);
+    // beta hat is the estimate of the slope parameter.
     let beta_hat: f32 = {
         let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
         let numerator: f32 = data_enum
@@ -171,6 +172,7 @@ fn detrend_data(data: Vec<f32>) -> Vec<f32> {
             .sum::<f32>();
         numerator/denominator 
     };
+    // alpha hat is the estimate of the intercept parameter.
     let alpha_hat: f32 = &ybar - &beta_hat*&xbar;
     
     let detrended_data = {
