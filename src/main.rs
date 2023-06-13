@@ -142,11 +142,8 @@ fn standard_deviation(data: &Vec<f32>) -> f32 {
 /// suggestion of the 1994 paper by Pincus, S.M.; Goldberger, A.L. titled:
 /// "Physiological time-series analysis: what does regularity quantify?"
 ///
-/// The line in which 'denominator' is created needs some explanation. The x
-/// values for this linear regression are always 1, 2, ..., len(data). The
-/// denominator for the estimation of beta is the sum of squares of the x
-/// inputs. A cool bit of math wizardry actually shows that there is a closed
-/// form expression for this that doesn't rely on the data itself.
+/// In theory there is a nice closed form expression for denominator. It might
+/// be useful to speed the program up, but honestly it is already fairly fast.
 ///
 /// # Arguments
 /// `data` - a mutable reference to the waveform data.
