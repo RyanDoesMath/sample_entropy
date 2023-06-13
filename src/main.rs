@@ -1,9 +1,29 @@
 use std::error::Error;
 use csv;
+use glob::glob;
+use tqdm::tqdm;
+use std::path::PathBuf;
 
 use std::time::{Instant};
 
 fn main() {
+    let GLOB_PATTERN: String = String::from("D:/datasets/vitaldb_individual_csvs/*.csv");
+    
+    const M: usize = 2;
+    for file in tqdm(glob(&GLOB_PATTERN).expect("Failed to read glob pattern.")) {
+        let path: String = match file {
+            Ok(path) => path.into_os_string().into_string().unwrap(),
+            Err(error) => panic!("{:?}", error),
+        };
+        let vital_file = read_csv(&path);
+        let vital_file = match vital_file {
+            Ok(result) => result,
+            Err(error) => panic!("Problem opening the csv file: {:?}", error),
+        };
+        let sbp_stdev: f32 = standard_deviation(&vital_file.sbp);
+        let sbp_r: f32 = sbp_stdev*0.2;
+        let spb_sampen: f32 = sample_entropy(M, sbp_r, &vital_file.sbp);
+    }
     let vital_file_result = read_csv("D:/datasets/vitaldb_individual_csvs/0001.csv");
 
     let vital_file_test = match vital_file_result {
@@ -11,7 +31,6 @@ fn main() {
         Err(error) => panic!("Problem opening the csv file: {:?}", error),
     };
     
-    const M: usize = 2;
     let stdev: f32 = standard_deviation(&vital_file_test.sbp);
     let r: f32 = stdev*0.2;
     let data: Vec<f32> = vital_file_test.sbp.clone();
@@ -19,7 +38,6 @@ fn main() {
     let data: Vec<f32> = detrend_data(data);
     let this_samp_en = sample_entropy(M, r, &data);
     let duration = start.elapsed();
-    println!("{:?}", data);
     println!("{:?}", this_samp_en);
     println!("{:?}", duration);
 }
