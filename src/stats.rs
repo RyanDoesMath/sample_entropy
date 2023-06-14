@@ -52,13 +52,12 @@ fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
 /// * `vec_2` - another immutable reference to a template vector.
 /// * `r` - the distance threshold over which a match does not occur.
 ///
-fn is_match(vec_1: &Vec<f32>, vec_2: &Vec<f32>, r: &f32) -> bool{
-    for i in 0..vec_1.len() {
-        if (vec_1[i] - vec_2[i]).abs() >= *r {
-            return false;
-        }
-    }
-    return true;
+fn is_match(vec_1: &Vec<f32>, vec_2: &Vec<f32>, r: &f32) -> bool {
+    let threshold = *r;
+    return vec_1
+        .iter()
+        .zip(vec_2)
+        .all(|x: (&f32, &f32)| (x.0 - x.1).abs() < threshold);
 }
 
 /// Computes sample entropy for a waveform.
