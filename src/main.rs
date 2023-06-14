@@ -1,9 +1,29 @@
 use std::error::Error;
 use csv;
+use glob::glob;
+use tqdm::tqdm;
+use std::path::PathBuf;
 
 use std::time::{Instant};
 
 fn main() {
+    let GLOB_PATTERN: String = String::from("D:/datasets/vitaldb_individual_csvs/*.csv");
+    
+    const M: usize = 2;
+    for file in tqdm(glob(&GLOB_PATTERN).expect("Failed to read glob pattern.")) {
+        let path: String = match file {
+            Ok(path) => path.into_os_string().into_string().unwrap(),
+            Err(error) => panic!("{:?}", error),
+        };
+        let vital_file = read_csv(&path);
+        let vital_file = match vital_file {
+            Ok(result) => result,
+            Err(error) => panic!("Problem opening the csv file: {:?}", error),
+        };
+        let sbp_stdev: f32 = standard_deviation(&vital_file.sbp);
+        let sbp_r: f32 = sbp_stdev*0.2;
+        let spb_sampen: f32 = sample_entropy(M, sbp_r, &vital_file.sbp);
+    }
     let vital_file_result = read_csv("D:/datasets/vitaldb_individual_csvs/0001.csv");
 
     let vital_file_test = match vital_file_result {
@@ -11,7 +31,6 @@ fn main() {
         Err(error) => panic!("Problem opening the csv file: {:?}", error),
     };
     
-    const M: usize = 2;
     let stdev: f32 = standard_deviation(&vital_file_test.sbp);
     let r: f32 = stdev*0.2;
     let data: Vec<f32> = vital_file_test.sbp.clone();
@@ -19,7 +38,6 @@ fn main() {
     let data: Vec<f32> = detrend_data(data);
     let this_samp_en = sample_entropy(M, r, &data);
     let duration = start.elapsed();
-    println!("{:?}", data);
     println!("{:?}", this_samp_en);
     println!("{:?}", duration);
 }
@@ -124,11 +142,8 @@ fn standard_deviation(data: &Vec<f32>) -> f32 {
 /// suggestion of the 1994 paper by Pincus, S.M.; Goldberger, A.L. titled:
 /// "Physiological time-series analysis: what does regularity quantify?"
 ///
-/// The line in which 'denominator' is created needs some explanation. The x
-/// values for this linear regression are always 1, 2, ..., len(data). The
-/// denominator for the estimation of beta is the sum of squares of the x
-/// inputs. A cool bit of math wizardry actually shows that there is a closed
-/// form expression for this that doesn't rely on the data itself.
+/// In theory there is a nice closed form expression for denominator. It might
+/// be useful to speed the program up, but honestly it is already fairly fast.
 ///
 /// # Arguments
 /// `data` - a mutable reference to the waveform data.
@@ -136,6 +151,7 @@ fn standard_deviation(data: &Vec<f32>) -> f32 {
 fn detrend_data(data: Vec<f32>) -> Vec<f32> {
     let xbar: f32 = ((data.len() as f32)+1.0)/2.0;
     let ybar: f32 = mean(&data);
+    // beta hat is the estimate of the slope parameter.
     let beta_hat: f32 = {
         let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
         let numerator: f32 = data_enum
@@ -153,6 +169,7 @@ fn detrend_data(data: Vec<f32>) -> Vec<f32> {
             .sum::<f32>();
         numerator/denominator 
     };
+    // alpha hat is the estimate of the intercept parameter.
     let alpha_hat: f32 = &ybar - &beta_hat*&xbar;
     
     let detrended_data = {
