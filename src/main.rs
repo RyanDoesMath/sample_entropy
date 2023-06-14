@@ -2,15 +2,16 @@ use std::error::Error;
 use csv;
 use glob::glob;
 use tqdm::tqdm;
-use std::path::PathBuf;
-
-use std::time::{Instant};
+use rayon::prelude::*;
+use indicatif::ParallelProgressIterator;
+use std::time::Instant;
 
 fn main() {
-    let GLOB_PATTERN: String = String::from("D:/datasets/vitaldb_individual_csvs/*.csv");
+    let glob_pattern: String = String::from("D:/datasets/vitaldb_individual_csvs/*.csv");
     
-    const M: usize = 2;
-    for file in tqdm(glob(&GLOB_PATTERN).expect("Failed to read glob pattern.")) {
+    println!("Reading vital files...");
+    let mut vital_files: Vec<VitalFile> = Vec::new();
+    for file in tqdm(glob(&glob_pattern).expect("Failed to read glob pattern.")) {
         let path: String = match file {
             Ok(path) => path.into_os_string().into_string().unwrap(),
             Err(error) => panic!("{:?}", error),
@@ -20,26 +21,55 @@ fn main() {
             Ok(result) => result,
             Err(error) => panic!("Problem opening the csv file: {:?}", error),
         };
-        let sbp_stdev: f32 = standard_deviation(&vital_file.sbp);
-        let sbp_r: f32 = sbp_stdev*0.2;
-        let spb_sampen: f32 = sample_entropy(M, sbp_r, &vital_file.sbp);
+        vital_files.push(vital_file);
     }
-    let vital_file_result = read_csv("D:/datasets/vitaldb_individual_csvs/0001.csv");
-
-    let vital_file_test = match vital_file_result {
-        Ok(result) => result,
-        Err(error) => panic!("Problem opening the csv file: {:?}", error),
-    };
-    
-    let stdev: f32 = standard_deviation(&vital_file_test.sbp);
-    let r: f32 = stdev*0.2;
-    let data: Vec<f32> = vital_file_test.sbp.clone();
+    const M: usize = 2;
     let start = Instant::now();
-    let data: Vec<f32> = detrend_data(data);
-    let this_samp_en = sample_entropy(M, r, &data);
+    let sample_entropies: Vec<VitalEntropies> = {
+        vital_files.par_iter().progress()
+                   .map(|vf| compute_sampen_for_vital_file(M, &vf))
+                   .collect::<Vec<VitalEntropies>>()
+                   
+    };
     let duration = start.elapsed();
-    println!("{:?}", this_samp_en);
+    println!("{:?}", sample_entropies[0].sbp_sampen);
     println!("{:?}", duration);
+}
+
+/// Vital file struct for holding the data.
+pub struct VitalFile {
+    name: String,
+    sbp: Vec<f32>,
+    mbp: Vec<f32>,
+    dbp: Vec<f32>,
+}
+
+/// Struct to store the name along with the entropy values.
+pub struct VitalEntropies {
+    name: String,
+    sbp_sampen: f32,
+    mbp_sampen: f32,
+    dbp_sampen: f32,
+}
+
+/// Computes sample entropy for a single VitalFile struct.
+fn compute_sampen_for_vital_file(m: usize, vitalf: &VitalFile) -> VitalEntropies {
+    let sbp_sampen: f32 = compute_sampen_for_wave(m, detrend_data(vitalf.sbp.clone()));
+    let mbp_sampen: f32 = compute_sampen_for_wave(m, detrend_data(vitalf.mbp.clone()));
+    let dbp_sampen: f32 = compute_sampen_for_wave(m, detrend_data(vitalf.dbp.clone()));
+
+    return VitalEntropies {
+        name: vitalf.name.clone(),
+        sbp_sampen: sbp_sampen,
+        mbp_sampen: mbp_sampen,
+        dbp_sampen: dbp_sampen,
+    }
+}
+
+fn compute_sampen_for_wave(m: usize, data: Vec<f32>) -> f32 {
+    let stdev: f32 = standard_deviation(&data);
+    let r: f32 = stdev*0.2;
+    return sample_entropy(m, r, &data);
 }
 
 /// Constructs the template vectors for a given time series.
@@ -160,10 +190,9 @@ fn detrend_data(data: Vec<f32>) -> Vec<f32> {
             .collect::<Vec<_>>()
             .into_iter()
             .sum::<f32>();
-        let n: f32 = data.len() as f32;
         let denominator: f32 = data_enum
             .iter()
-            .map(|(x, y)| ((*x as f32)+1.0-xbar).powf(2.0))
+            .map(|(x, _y)| ((*x as f32)+1.0-xbar).powf(2.0))
             .collect::<Vec<_>>()
             .into_iter()
             .sum::<f32>();
@@ -180,14 +209,6 @@ fn detrend_data(data: Vec<f32>) -> Vec<f32> {
             .collect::<Vec<f32>>()
     };
     return detrended_data
-}
-
-/// Vital file struct for holding the data.
-pub struct VitalFile {
-    name: String,
-    sbp: Vec<f32>,
-    mbp: Vec<f32>,
-    dbp: Vec<f32>,
 }
 
 /// Reads waveform data from a file into a vector.
