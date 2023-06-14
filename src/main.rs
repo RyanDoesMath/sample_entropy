@@ -5,8 +5,10 @@ use tqdm::tqdm;
 use rayon::prelude::*;
 use indicatif::ParallelProgressIterator;
 use std::time::Instant;
+use std::fs::File;
+use std::io::Write;
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let glob_pattern: String = String::from("D:/datasets/vitaldb_individual_csvs/*.csv");
     
     println!("Reading vital files...");
@@ -32,8 +34,17 @@ fn main() {
                    
     };
     let duration = start.elapsed();
-    println!("{:?}", sample_entropies[0].sbp_sampen);
     println!("{:?}", duration);
+
+    let entropy_csv: String = {
+        sample_entropies.iter()
+                        .map(|ve| vital_entropy_to_csv_line(&ve))
+                        .collect::<Vec<String>>()
+                        .join("")
+    };
+    let mut file = File::create("vitaldb_entropies_rust.csv")?;
+    write!(file, "{}", entropy_csv);
+    Ok(())
 }
 
 /// Vital file struct for holding the data.
@@ -72,6 +83,18 @@ fn compute_sampen_for_wave(m: usize, data: Vec<f32>) -> f32 {
     return sample_entropy(m, r, &data);
 }
 
+fn vital_entropy_to_csv_line(ve: &VitalEntropies) -> String {
+    let comma: String = String::from(", ");
+    let newline: String = String::from("\n");
+
+    let mut line: String = ve.name.clone();
+    line = line + &comma;
+    line = line + &ve.sbp_sampen.to_string() + &comma;
+    line = line + &ve.mbp_sampen.to_string() + &comma;
+    line = line + &ve.dbp_sampen.to_string() + &newline;
+
+    return line;
+}
 /// Constructs the template vectors for a given time series.
 ///
 /// # Arguments
