@@ -1,11 +1,11 @@
-use std::error::Error;
 use csv;
 use glob::glob;
-use rayon::prelude::*;
 use indicatif::{ParallelProgressIterator, ProgressBar};
-use std::time::Instant;
+use rayon::prelude::*;
+use std::error::Error;
 use std::fs::File;
 use std::io::Write;
+use std::time::Instant;
 mod stats;
 
 fn main() -> std::io::Result<()> {
@@ -17,20 +17,22 @@ fn main() -> std::io::Result<()> {
     println!("Computing sample entropy...");
     let start = Instant::now();
     let sample_entropies: Vec<VitalEntropies> = {
-        vital_files.par_iter().progress()
-                   .map(|vf| compute_sampen_for_vital_file(M, &vf))
-                   .collect::<Vec<VitalEntropies>>()
-                   
+        vital_files
+            .par_iter()
+            .progress()
+            .map(|vf| compute_sampen_for_vital_file(M, &vf))
+            .collect::<Vec<VitalEntropies>>()
     };
     let duration = start.elapsed();
     println!("Sample entropy computation finished in: {:?}", duration);
 
     println!("Saving to csv...");
     let entropy_csv: String = {
-        sample_entropies.iter()
-                        .map(|ve| vital_entropy_to_csv_line(&ve))
-                        .collect::<Vec<String>>()
-                        .join("")
+        sample_entropies
+            .iter()
+            .map(|ve| vital_entropy_to_csv_line(&ve))
+            .collect::<Vec<String>>()
+            .join("")
     };
     let mut file = File::create("vitaldb_entropies_rust.csv")?;
     write!(file, "{}", entropy_csv)?;
@@ -64,12 +66,12 @@ fn compute_sampen_for_vital_file(m: usize, vitalf: &VitalFile) -> VitalEntropies
         sbp_sampen: sbp_sampen,
         mbp_sampen: mbp_sampen,
         dbp_sampen: dbp_sampen,
-    }
+    };
 }
 
 fn compute_sampen_for_wave(m: usize, data: Vec<f32>) -> f32 {
     let stdev: f32 = stats::standard_deviation(&data);
-    let r: f32 = stdev*0.2;
+    let r: f32 = stdev * 0.2;
     return stats::sample_entropy(m, r, &data);
 }
 
@@ -87,14 +89,14 @@ fn vital_entropy_to_csv_line(ve: &VitalEntropies) -> String {
 }
 
 /// Reads waveform data from a file into a vector.
-/// 
+///
 /// Due to waves being different length, they cannot be put into a single csv
 /// file without doing awkward things. For convenience, csv files for each
 /// vital filename was made. The vital_file struct holds this data.
-/// 
+///
 /// # Arguments
 /// * `path` - a reference to a string filepath to a csv file.
-/// 
+///
 
 fn read_csv(path: &str) -> Result<VitalFile, Box<dyn Error>> {
     // Read data from path.
@@ -113,14 +115,14 @@ fn read_csv(path: &str) -> Result<VitalFile, Box<dyn Error>> {
         let mbp = record[1].parse::<f32>()?;
         let sbp = record[2].parse::<f32>()?;
         let dbp = record[3].parse::<f32>()?;
-        
+
         record_names.push(name.to_string());
         mean_blood_pressures.push(mbp);
         systolic_blood_pressures.push(sbp);
         diastolic_blood_pressures.push(dbp);
     }
 
-    let new_vital_file = VitalFile{
+    let new_vital_file = VitalFile {
         name: record_names[0].clone(),
         sbp: systolic_blood_pressures,
         mbp: mean_blood_pressures,

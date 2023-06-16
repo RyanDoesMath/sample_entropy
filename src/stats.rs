@@ -8,9 +8,9 @@
 fn construct_templates(m: usize, data: &Vec<f32>) -> Vec<Vec<f32>> {
     let mut templates: Vec<Vec<f32>> = Vec::new();
     let mut new_template: Vec<f32>;
-    for i in m..data.len()+1 {
+    for i in m..data.len() + 1 {
         new_template = Vec::new();
-        for j in (i-m)..i {
+        for j in (i - m)..i {
             new_template.push(data[j]);
         }
         templates.push(new_template);
@@ -27,15 +27,15 @@ fn construct_templates(m: usize, data: &Vec<f32>) -> Vec<Vec<f32>> {
 ///
 fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
     let mut matches: u32 = 0;
-    
+
     for i in 0..templates.len() {
-        for j in i+1..templates.len() {
+        for j in i + 1..templates.len() {
             if is_match(&templates[i], &templates[j], &r) {
                 matches += 1;
             }
         }
     }
-    return matches*2;
+    return matches * 2;
 }
 
 /// Determines if two templates match.
@@ -52,13 +52,12 @@ fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
 /// * `vec_2` - another immutable reference to a template vector.
 /// * `r` - the distance threshold over which a match does not occur.
 ///
-fn is_match(vec_1: &Vec<f32>, vec_2: &Vec<f32>, r: &f32) -> bool{
-    for i in 0..vec_1.len() {
-        if (vec_1[i] - vec_2[i]).abs() >= *r {
-            return false;
-        }
-    }
-    return true;
+fn is_match(vec_1: &Vec<f32>, vec_2: &Vec<f32>, r: &f32) -> bool {
+    let threshold = *r;
+    return vec_1
+        .iter()
+        .zip(vec_2)
+        .all(|x: (&f32, &f32)| (x.0 - x.1).abs() < threshold);
 }
 
 /// Computes sample entropy for a waveform.
@@ -74,7 +73,7 @@ pub fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
     let templates_size_m_plus_1: Vec<Vec<f32>> = construct_templates(m_plus_one, &data);
     let length_m_template_matches: f32 = get_matches(&templates_size_m, &r) as f32;
     let length_m_plus_1_template_matches: f32 = get_matches(&templates_size_m_plus_1, &r) as f32;
-    let ratio: f32 = length_m_plus_1_template_matches/length_m_template_matches;
+    let ratio: f32 = length_m_plus_1_template_matches / length_m_template_matches;
     let sampen: f32 = -(ratio).ln();
     return sampen;
 }
@@ -88,11 +87,11 @@ pub fn mean(data: &Vec<f32>) -> f32 {
 pub fn standard_deviation(data: &Vec<f32>) -> f32 {
     let xbar: f32 = mean(data);
     let squared_err: Vec<f32> = data.iter().map(|x| (x - xbar).powf(2.0)).collect();
-    return ((squared_err.iter().sum::<f32>())/((data.len() as f32))).sqrt();
+    return ((squared_err.iter().sum::<f32>()) / (data.len() as f32)).sqrt();
 }
 
 /// Detrends the data via a linear detrending.
-/// 
+///
 /// Fits an ordinary least squares regression line to the data, then subtracts
 /// the estimation from the model to detrend the data. This is done at the
 /// suggestion of the 1994 paper by Pincus, S.M.; Goldberger, A.L. titled:
@@ -105,34 +104,34 @@ pub fn standard_deviation(data: &Vec<f32>) -> f32 {
 /// `data` - a mutable reference to the waveform data.
 ///
 pub fn detrend_data(data: Vec<f32>) -> Vec<f32> {
-    let xbar: f32 = ((data.len() as f32)+1.0)/2.0;
+    let xbar: f32 = ((data.len() as f32) + 1.0) / 2.0;
     let ybar: f32 = mean(&data);
     // beta hat is the estimate of the slope parameter.
     let beta_hat: f32 = {
         let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
         let numerator: f32 = data_enum
             .iter()
-            .map(|(x, y)| ((*x as f32)+1.0-xbar)*(*y-ybar))
+            .map(|(x, y)| ((*x as f32) + 1.0 - xbar) * (*y - ybar))
             .collect::<Vec<_>>()
             .into_iter()
             .sum::<f32>();
         let denominator: f32 = data_enum
             .iter()
-            .map(|(x, _y)| ((*x as f32)+1.0-xbar).powf(2.0))
+            .map(|(x, _y)| ((*x as f32) + 1.0 - xbar).powf(2.0))
             .collect::<Vec<_>>()
             .into_iter()
             .sum::<f32>();
-        numerator/denominator 
+        numerator / denominator
     };
     // alpha hat is the estimate of the intercept parameter.
-    let alpha_hat: f32 = &ybar - &beta_hat*&xbar;
-    
+    let alpha_hat: f32 = &ybar - &beta_hat * &xbar;
+
     let detrended_data = {
         let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
         data_enum
             .iter()
-            .map(|(ix, val)| *val - &alpha_hat - (&beta_hat*((*ix as f32)+1.0)))
+            .map(|(ix, val)| *val - &alpha_hat - (&beta_hat * ((*ix as f32) + 1.0)))
             .collect::<Vec<f32>>()
     };
-    return detrended_data
+    return detrended_data;
 }
