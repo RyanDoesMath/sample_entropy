@@ -26,6 +26,8 @@ fn main() -> std::io::Result<()> {
         vital_files.push(vital_file);
     }
     const M: usize = 2;
+
+    println!("Computing sample entropy...");
     let start = Instant::now();
     let sample_entropies: Vec<VitalEntropies> = {
         vital_files.par_iter().progress()
@@ -36,6 +38,7 @@ fn main() -> std::io::Result<()> {
     let duration = start.elapsed();
     println!("{:?}", duration);
 
+    println!("Saving to csv...");
     let entropy_csv: String = {
         sample_entropies.iter()
                         .map(|ve| vital_entropy_to_csv_line(&ve))
