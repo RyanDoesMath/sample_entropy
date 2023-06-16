@@ -1,5 +1,3 @@
-
-
 /// Constructs the template vectors for a given time series.
 ///
 /// # Arguments
