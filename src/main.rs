@@ -10,26 +10,8 @@ mod stats;
 
 fn main() -> std::io::Result<()> {
     let glob_pattern: String = String::from("D:/datasets/vitaldb_individual_csvs/*.csv");
-    
     println!("Reading vital files...");
-    let glob_files = glob(&glob_pattern).expect("Failed to read glob pattern.");
-    let bar = ProgressBar::new(glob_files.count() as u64);
-
-    let glob_files = glob(&glob_pattern).expect("Failed to read glob pattern.");
-    let mut vital_files: Vec<VitalFile> = Vec::new();
-    for file in glob_files {
-        let path: String = match file {
-            Ok(path) => path.into_os_string().into_string().unwrap(),
-            Err(error) => panic!("{:?}", error),
-        };
-        let vital_file = read_csv(&path);
-        let vital_file = match vital_file {
-            Ok(result) => result,
-            Err(error) => panic!("Problem opening the csv file: {:?}", error),
-        };
-        vital_files.push(vital_file);
-        bar.inc(1);
-    }
+    let vital_files = read_glob_into_vitalfiles(&glob_pattern);
     const M: usize = 2;
 
     println!("Computing sample entropy...");
@@ -41,7 +23,7 @@ fn main() -> std::io::Result<()> {
                    
     };
     let duration = start.elapsed();
-    println!("{:?}", duration);
+    println!("Sample entropy computation finished in: {:?}", duration);
 
     println!("Saving to csv...");
     let entropy_csv: String = {
@@ -146,4 +128,34 @@ fn read_csv(path: &str) -> Result<VitalFile, Box<dyn Error>> {
     };
 
     Ok(new_vital_file)
+}
+
+/// Reads all the files from the glob pattern into a vector of VitalFiles.
+///
+/// # Arguments
+/// * `glob_pattern` - a String pattern for glob to use.
+///
+
+fn read_glob_into_vitalfiles(glob_pattern: &String) -> Vec<VitalFile> {
+    let bar = {
+        let glob_files = glob(&glob_pattern).expect("Failed to read glob pattern.");
+        ProgressBar::new(glob_files.count() as u64)
+    };
+
+    let glob_files = glob(&glob_pattern).expect("Failed to read glob pattern.");
+    let mut vital_files: Vec<VitalFile> = Vec::new();
+    for file in glob_files {
+        let path: String = match file {
+            Ok(path) => path.into_os_string().into_string().unwrap(),
+            Err(error) => panic!("{:?}", error),
+        };
+        let vital_file = match read_csv(&path) {
+            Ok(result) => result,
+            Err(error) => panic!("Problem opening the csv file: {:?}", error),
+        };
+        vital_files.push(vital_file);
+        bar.inc(1);
+    }
+
+    return vital_files;
 }
