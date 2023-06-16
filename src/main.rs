@@ -1,9 +1,8 @@
 use std::error::Error;
 use csv;
 use glob::glob;
-use tqdm::tqdm;
 use rayon::prelude::*;
-use indicatif::ParallelProgressIterator;
+use indicatif::{ParallelProgressIterator, ProgressBar};
 use std::time::Instant;
 use std::fs::File;
 use std::io::Write;
@@ -13,8 +12,12 @@ fn main() -> std::io::Result<()> {
     let glob_pattern: String = String::from("D:/datasets/vitaldb_individual_csvs/*.csv");
     
     println!("Reading vital files...");
+    let glob_files = glob(&glob_pattern).expect("Failed to read glob pattern.");
+    let bar = ProgressBar::new(glob_files.count() as u64);
+
+    let glob_files = glob(&glob_pattern).expect("Failed to read glob pattern.");
     let mut vital_files: Vec<VitalFile> = Vec::new();
-    for file in tqdm(glob(&glob_pattern).expect("Failed to read glob pattern.")) {
+    for file in glob_files {
         let path: String = match file {
             Ok(path) => path.into_os_string().into_string().unwrap(),
             Err(error) => panic!("{:?}", error),
@@ -25,6 +28,7 @@ fn main() -> std::io::Result<()> {
             Err(error) => panic!("Problem opening the csv file: {:?}", error),
         };
         vital_files.push(vital_file);
+        bar.inc(1);
     }
     const M: usize = 2;
 
