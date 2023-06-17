@@ -24,7 +24,7 @@ fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
 
     for i in 0..templates.len() {
         for j in i + 1..templates.len() {
-            if is_match(&templates[i], &templates[j], &r) {
+            if is_match(&templates[i], &templates[j], r) {
                 matches += 1;
             }
         }
@@ -62,9 +62,9 @@ fn is_match(vec_1: &Vec<f32>, vec_2: &Vec<f32>, r: &f32) -> bool {
 /// * `data` - a vector containing the waveform data.
 ///
 pub fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
-    let templates_size_m: Vec<Vec<f32>> = construct_templates(m, &data);
+    let templates_size_m: Vec<Vec<f32>> = construct_templates(m, data);
     let m_plus_one = m + 1;
-    let templates_size_m_plus_1: Vec<Vec<f32>> = construct_templates(m_plus_one, &data);
+    let templates_size_m_plus_1: Vec<Vec<f32>> = construct_templates(m_plus_one, data);
     let length_m_template_matches: f32 = get_matches(&templates_size_m, &r) as f32;
     let length_m_plus_1_template_matches: f32 = get_matches(&templates_size_m_plus_1, &r) as f32;
     let ratio: f32 = length_m_plus_1_template_matches / length_m_template_matches;

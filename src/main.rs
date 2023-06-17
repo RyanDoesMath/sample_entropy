@@ -19,7 +19,7 @@ fn main() -> std::io::Result<()> {
         vital_files
             .par_iter()
             .progress()
-            .map(|vf| compute_sampen_for_vital_file(M, &vf))
+            .map(|vf| compute_sampen_for_vital_file(M, vf))
             .collect::<Vec<VitalEntropies>>()
     };
     let duration = start.elapsed();
@@ -29,7 +29,7 @@ fn main() -> std::io::Result<()> {
     let entropy_csv: String = {
         sample_entropies
             .iter()
-            .map(|ve| vital_entropy_to_csv_line(&ve))
+            .map(|ve| vital_entropy_to_csv_line(ve))
             .collect::<Vec<String>>()
             .join("")
     };
@@ -139,11 +139,11 @@ fn read_csv(path: &str) -> Result<VitalFile, Box<dyn Error>> {
 
 fn read_glob_into_vitalfiles(glob_pattern: &String) -> Vec<VitalFile> {
     let bar = {
-        let glob_files = glob(&glob_pattern).expect("Failed to read glob pattern.");
+        let glob_files = glob(glob_pattern).expect("Failed to read glob pattern.");
         ProgressBar::new(glob_files.count() as u64)
     };
 
-    let glob_files = glob(&glob_pattern).expect("Failed to read glob pattern.");
+    let glob_files = glob(glob_pattern).expect("Failed to read glob pattern.");
     let mut vital_files: Vec<VitalFile> = Vec::new();
     for file in glob_files {
         let path: String = match file {
