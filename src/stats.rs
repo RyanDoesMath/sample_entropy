@@ -27,7 +27,7 @@ fn get_matches(templates: &[Vec<f32>], threshold: &f32) -> usize {
     templates
         .iter()
         .combinations(2)
-        .filter(|x| is_match(&x[0], &x[1], &threshold))
+        .filter(|x| is_match(x[0], x[1], threshold))
         .count()
         * 2
 }
