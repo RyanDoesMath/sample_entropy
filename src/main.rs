@@ -29,7 +29,7 @@ fn main() -> std::io::Result<()> {
     let entropy_csv: String = {
         sample_entropies
             .iter()
-            .map(|ve| vital_entropy_to_csv_line(ve))
+            .map(vital_entropy_to_csv_line)
             .collect::<Vec<String>>()
             .join("")
     };
