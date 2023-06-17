@@ -118,14 +118,10 @@ pub fn detrend_data(data: Vec<f32>) -> Vec<f32> {
     // alpha hat is the estimate of the intercept parameter.
     let alpha_hat: f32 = ybar - beta_hat * xbar;
 
-    let detrended_data = {
-        let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
-        data_enum
-            .iter()
-            .map(|(ix, val)| *val - alpha_hat - (beta_hat * ((*ix as f32) + 1.0)))
-            .collect::<Vec<f32>>()
-    };
-    detrended_data
+    data.iter()
+        .enumerate()
+        .map(|(ix, val)| val - alpha_hat - (beta_hat * ((ix as f32) + 1.0)))
+        .collect::<Vec<f32>>()
 }
 
 #[cfg(test)]
