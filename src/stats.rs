@@ -104,19 +104,15 @@ pub fn detrend_data(data: Vec<f32>) -> Vec<f32> {
     let ybar: f32 = mean(&data);
     // beta hat is the estimate of the slope parameter.
     let beta_hat: f32 = {
-        let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
-        let numerator: f32 = data_enum
-            .iter()
-            .map(|(x, y)| ((*x as f32) + 1.0 - xbar) * (*y - ybar))
-            .collect::<Vec<_>>()
-            .into_iter()
-            .sum::<f32>();
-        let denominator: f32 = data_enum
-            .iter()
-            .map(|(x, _y)| ((*x as f32) + 1.0 - xbar).powf(2.0))
-            .collect::<Vec<_>>()
-            .into_iter()
-            .sum::<f32>();
+        let (numerator, denominator): (f32, f32) =
+            data.iter()
+                .enumerate()
+                .fold((0_f32, 0_f32), |acc, (index, value)| {
+                    let temp = (index + 1) as f32 - xbar;
+                    let num_acc = acc.0 + (temp * (value - ybar));
+                    let den_acc = acc.1 + (temp.powf(2.0));
+                    (num_acc, den_acc)
+                });
         numerator / denominator
     };
     // alpha hat is the estimate of the intercept parameter.
