@@ -56,9 +56,9 @@ pub struct VitalEntropies {
 
 /// Computes sample entropy for a single VitalFile struct.
 fn compute_sampen_for_vital_file(m: usize, vitalf: &VitalFile) -> VitalEntropies {
-    let sbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(vitalf.sbp.clone()));
-    let mbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(vitalf.mbp.clone()));
-    let dbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(vitalf.dbp.clone()));
+    let sbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(&vitalf.sbp));
+    let mbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(&vitalf.mbp));
+    let dbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(&vitalf.dbp));
 
     VitalEntropies {
         name: vitalf.name.clone(),
