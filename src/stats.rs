@@ -98,7 +98,7 @@ pub fn standard_deviation(data: &Vec<f32>) -> f32 {
 /// `data` - a mutable reference to the waveform data.
 ///
 pub fn detrend_data(data: Vec<f32>) -> Vec<f32> {
-    let xbar: f32 = ((data.len() as f32) + 1.0) / 2.0;
+    let xbar: f32 = (data.len() + 1) as f32 / 2.0;
     let ybar: f32 = mean(&data);
     // beta hat is the estimate of the slope parameter.
     let beta_hat: f32 = {
