@@ -6,6 +6,9 @@ use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
 mod stats;
+mod vital_entropies;
+
+use vital_entropies::VitalEntropies;
 
 fn main() -> std::io::Result<()> {
     let glob_pattern: String = String::from("D:/datasets/vitaldb_individual_csvs/*.csv");
@@ -44,14 +47,6 @@ pub struct VitalFile {
     sbp: Vec<f32>,
     mbp: Vec<f32>,
     dbp: Vec<f32>,
-}
-
-/// Struct to store the name along with the entropy values.
-pub struct VitalEntropies {
-    name: String,
-    sbp_sampen: f32,
-    mbp_sampen: f32,
-    dbp_sampen: f32,
 }
 
 /// Computes sample entropy for a single VitalFile struct.
