@@ -60,18 +60,18 @@ fn compute_sampen_for_vital_file(m: usize, vitalf: &VitalFile) -> VitalEntropies
     let mbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(vitalf.mbp.clone()));
     let dbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(vitalf.dbp.clone()));
 
-    return VitalEntropies {
+    VitalEntropies {
         name: vitalf.name.clone(),
         sbp_sampen,
         mbp_sampen,
         dbp_sampen,
-    };
+    }
 }
 
 fn compute_sampen_for_wave(m: usize, data: Vec<f32>) -> f32 {
     let stdev: f32 = stats::standard_deviation(&data);
     let r: f32 = stdev * 0.2;
-    return stats::sample_entropy(m, r, &data);
+    stats::sample_entropy(m, r, &data)
 }
 
 fn vital_entropy_to_csv_line(ve: &VitalEntropies) -> String {
@@ -84,7 +84,7 @@ fn vital_entropy_to_csv_line(ve: &VitalEntropies) -> String {
     line = line + &ve.mbp_sampen.to_string() + &comma;
     line = line + &ve.dbp_sampen.to_string() + &newline;
 
-    return line;
+    line
 }
 
 /// Reads waveform data from a file into a vector.
@@ -158,5 +158,5 @@ fn read_glob_into_vitalfiles(glob_pattern: &String) -> Vec<VitalFile> {
         bar.inc(1);
     }
 
-    return vital_files;
+    vital_files
 }

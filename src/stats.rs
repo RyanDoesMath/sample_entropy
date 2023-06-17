@@ -7,9 +7,9 @@
 ///
 fn construct_templates(window_size: usize, ts_data: &Vec<f32>) -> Vec<Vec<f32>> {
     let num_windows = ts_data.len() - window_size + 1;
-    return (0..num_windows)
+    (0..num_windows)
         .map(|x| ts_data[x..x + window_size].to_vec())
-        .collect::<Vec<Vec<f32>>>();
+        .collect::<Vec<Vec<f32>>>()
 }
 
 /// Gets the number of matches for a vector of templates.
@@ -29,7 +29,7 @@ fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
             }
         }
     }
-    return matches * 2;
+    matches * 2
 }
 
 /// Determines if two templates match.
@@ -69,7 +69,7 @@ pub fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
     let length_m_plus_1_template_matches: f32 = get_matches(&templates_size_m_plus_1, &r) as f32;
     let ratio: f32 = length_m_plus_1_template_matches / length_m_template_matches;
     let sampen: f32 = -(ratio).ln();
-    return sampen;
+    sampen
 }
 
 /// Vectorized one liner for computing the mean of a vector.
@@ -127,7 +127,7 @@ pub fn detrend_data(data: Vec<f32>) -> Vec<f32> {
             .map(|(ix, val)| *val - &alpha_hat - (&beta_hat * ((*ix as f32) + 1.0)))
             .collect::<Vec<f32>>()
     };
-    return detrended_data;
+    detrended_data
 }
 
 #[cfg(test)]
