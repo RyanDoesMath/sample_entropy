@@ -137,7 +137,7 @@ fn read_csv(path: &str) -> Result<VitalFile, Box<dyn Error>> {
 /// * `glob_pattern` - a String pattern for glob to use.
 ///
 
-fn read_glob_into_vitalfiles(glob_pattern: &String) -> Vec<VitalFile> {
+fn read_glob_into_vitalfiles(glob_pattern: &str) -> Vec<VitalFile> {
     let bar = {
         let glob_files = glob(glob_pattern).expect("Failed to read glob pattern.");
         ProgressBar::new(glob_files.count() as u64)
