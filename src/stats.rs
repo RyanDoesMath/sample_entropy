@@ -46,7 +46,7 @@ fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
 /// * `vec_2` - another immutable reference to a template vector.
 /// * `r` - the distance threshold over which a match does not occur.
 ///
-fn is_match(vec_1: &Vec<f32>, vec_2: &Vec<f32>, r: &f32) -> bool {
+fn is_match(vec_1: &[f32], vec_2: &Vec<f32>, r: &f32) -> bool {
     let threshold = *r;
     return vec_1
         .iter()
