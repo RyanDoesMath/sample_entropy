@@ -2,20 +2,14 @@
 ///
 /// # Arguments
 ///
-/// * `m` - the window size for a single template.
-/// * `data` - the time series data.
+/// * `window_size` - the window size for a single template.
+/// * `ts_data` - the time series data.
 ///
-fn construct_templates(m: usize, data: &Vec<f32>) -> Vec<Vec<f32>> {
-    let mut templates: Vec<Vec<f32>> = Vec::new();
-    let mut new_template: Vec<f32>;
-    for i in m..data.len() + 1 {
-        new_template = Vec::new();
-        for j in (i - m)..i {
-            new_template.push(data[j]);
-        }
-        templates.push(new_template);
-    }
-    return templates;
+fn construct_templates(window_size: usize, ts_data: &Vec<f32>) -> Vec<Vec<f32>> {
+    let num_windows = ts_data.len() - window_size + 1;
+    (0..num_windows)
+        .map(|x| ts_data[x..x + window_size].to_vec())
+        .collect::<Vec<Vec<f32>>>()
 }
 
 /// Gets the number of matches for a vector of templates.
@@ -30,12 +24,12 @@ fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
 
     for i in 0..templates.len() {
         for j in i + 1..templates.len() {
-            if is_match(&templates[i], &templates[j], &r) {
+            if is_match(&templates[i], &templates[j], r) {
                 matches += 1;
             }
         }
     }
-    return matches * 2;
+    matches * 2
 }
 
 /// Determines if two templates match.
@@ -52,7 +46,7 @@ fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
 /// * `vec_2` - another immutable reference to a template vector.
 /// * `r` - the distance threshold over which a match does not occur.
 ///
-fn is_match(vec_1: &Vec<f32>, vec_2: &Vec<f32>, r: &f32) -> bool {
+fn is_match(vec_1: &[f32], vec_2: &Vec<f32>, r: &f32) -> bool {
     let threshold = *r;
     return vec_1
         .iter()
@@ -68,19 +62,19 @@ fn is_match(vec_1: &Vec<f32>, vec_2: &Vec<f32>, r: &f32) -> bool {
 /// * `data` - a vector containing the waveform data.
 ///
 pub fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
-    let templates_size_m: Vec<Vec<f32>> = construct_templates(m, &data);
+    let templates_size_m: Vec<Vec<f32>> = construct_templates(m, data);
     let m_plus_one = m + 1;
-    let templates_size_m_plus_1: Vec<Vec<f32>> = construct_templates(m_plus_one, &data);
+    let templates_size_m_plus_1: Vec<Vec<f32>> = construct_templates(m_plus_one, data);
     let length_m_template_matches: f32 = get_matches(&templates_size_m, &r) as f32;
     let length_m_plus_1_template_matches: f32 = get_matches(&templates_size_m_plus_1, &r) as f32;
     let ratio: f32 = length_m_plus_1_template_matches / length_m_template_matches;
     let sampen: f32 = -(ratio).ln();
-    return sampen;
+    sampen
 }
 
 /// Vectorized one liner for computing the mean of a vector.
 pub fn mean(data: &Vec<f32>) -> f32 {
-    data.iter().sum::<f32>() as f32 / data.len() as f32
+    data.iter().sum::<f32>() / data.len() as f32
 }
 
 /// Vectorized read-only code that computes standard deviation.
@@ -124,14 +118,39 @@ pub fn detrend_data(data: Vec<f32>) -> Vec<f32> {
         numerator / denominator
     };
     // alpha hat is the estimate of the intercept parameter.
-    let alpha_hat: f32 = &ybar - &beta_hat * &xbar;
+    let alpha_hat: f32 = ybar - beta_hat * xbar;
 
     let detrended_data = {
         let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
         data_enum
             .iter()
-            .map(|(ix, val)| *val - &alpha_hat - (&beta_hat * ((*ix as f32) + 1.0)))
+            .map(|(ix, val)| *val - alpha_hat - (beta_hat * ((*ix as f32) + 1.0)))
             .collect::<Vec<f32>>()
     };
-    return detrended_data;
+    detrended_data
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_constuct_templates_1() {
+        let expected: Vec<Vec<f32>> = vec![vec![1_f32], vec![2f32], vec![3_f32]];
+        assert_eq!(expected, construct_templates(1, &vec![1_f32, 2_f32, 3_f32]));
+    }
+
+    #[test]
+    fn test_constuct_templates_2() {
+        let expected: Vec<Vec<f32>> = vec![
+            vec![1_f32, 2_f32],
+            vec![2f32, 3_f32],
+            vec![3_f32, 4f32],
+            vec![4_f32, 5_f32],
+        ];
+        assert_eq!(
+            expected,
+            construct_templates(2, &vec![1_f32, 2_f32, 3_f32, 4_f32, 5_f32])
+        );
+    }
 }

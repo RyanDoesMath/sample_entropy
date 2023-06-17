@@ -1,4 +1,3 @@
-use csv;
 use glob::glob;
 use indicatif::{ParallelProgressIterator, ProgressBar};
 use rayon::prelude::*;
@@ -20,7 +19,7 @@ fn main() -> std::io::Result<()> {
         vital_files
             .par_iter()
             .progress()
-            .map(|vf| compute_sampen_for_vital_file(M, &vf))
+            .map(|vf| compute_sampen_for_vital_file(M, vf))
             .collect::<Vec<VitalEntropies>>()
     };
     let duration = start.elapsed();
@@ -30,7 +29,7 @@ fn main() -> std::io::Result<()> {
     let entropy_csv: String = {
         sample_entropies
             .iter()
-            .map(|ve| vital_entropy_to_csv_line(&ve))
+            .map(vital_entropy_to_csv_line)
             .collect::<Vec<String>>()
             .join("")
     };
@@ -61,18 +60,18 @@ fn compute_sampen_for_vital_file(m: usize, vitalf: &VitalFile) -> VitalEntropies
     let mbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(vitalf.mbp.clone()));
     let dbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(vitalf.dbp.clone()));
 
-    return VitalEntropies {
+    VitalEntropies {
         name: vitalf.name.clone(),
-        sbp_sampen: sbp_sampen,
-        mbp_sampen: mbp_sampen,
-        dbp_sampen: dbp_sampen,
-    };
+        sbp_sampen,
+        mbp_sampen,
+        dbp_sampen,
+    }
 }
 
 fn compute_sampen_for_wave(m: usize, data: Vec<f32>) -> f32 {
     let stdev: f32 = stats::standard_deviation(&data);
     let r: f32 = stdev * 0.2;
-    return stats::sample_entropy(m, r, &data);
+    stats::sample_entropy(m, r, &data)
 }
 
 fn vital_entropy_to_csv_line(ve: &VitalEntropies) -> String {
@@ -85,7 +84,7 @@ fn vital_entropy_to_csv_line(ve: &VitalEntropies) -> String {
     line = line + &ve.mbp_sampen.to_string() + &comma;
     line = line + &ve.dbp_sampen.to_string() + &newline;
 
-    return line;
+    line
 }
 
 /// Reads waveform data from a file into a vector.
@@ -138,13 +137,13 @@ fn read_csv(path: &str) -> Result<VitalFile, Box<dyn Error>> {
 /// * `glob_pattern` - a String pattern for glob to use.
 ///
 
-fn read_glob_into_vitalfiles(glob_pattern: &String) -> Vec<VitalFile> {
+fn read_glob_into_vitalfiles(glob_pattern: &str) -> Vec<VitalFile> {
     let bar = {
-        let glob_files = glob(&glob_pattern).expect("Failed to read glob pattern.");
+        let glob_files = glob(glob_pattern).expect("Failed to read glob pattern.");
         ProgressBar::new(glob_files.count() as u64)
     };
 
-    let glob_files = glob(&glob_pattern).expect("Failed to read glob pattern.");
+    let glob_files = glob(glob_pattern).expect("Failed to read glob pattern.");
     let mut vital_files: Vec<VitalFile> = Vec::new();
     for file in glob_files {
         let path: String = match file {
@@ -159,5 +158,5 @@ fn read_glob_into_vitalfiles(glob_pattern: &String) -> Vec<VitalFile> {
         bar.inc(1);
     }
 
-    return vital_files;
+    vital_files
 }
