@@ -80,8 +80,8 @@ pub fn mean(data: &[f32]) -> f32 {
 /// Vectorized read-only code that computes standard deviation.
 pub fn standard_deviation(data: &[f32]) -> f32 {
     let xbar: f32 = mean(data);
-    let squared_err: Vec<f32> = data.iter().map(|x| (x - xbar).powf(2.0)).collect();
-    return ((squared_err.iter().sum::<f32>()) / (data.len() as f32)).sqrt();
+    let squared_err_sum: f32 = data.iter().fold(0_f32, |acc, x| acc + ((x - xbar).powf(2.0)));
+    (squared_err_sum / (data.len() as f32)).sqrt()
 }
 
 /// Detrends the data via a linear detrending.
