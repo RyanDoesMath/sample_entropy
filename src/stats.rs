@@ -2,20 +2,14 @@
 ///
 /// # Arguments
 ///
-/// * `m` - the window size for a single template.
-/// * `data` - the time series data.
+/// * `window_size` - the window size for a single template.
+/// * `ts_data` - the time series data.
 ///
-fn construct_templates(m: usize, data: &Vec<f32>) -> Vec<Vec<f32>> {
-    let mut templates: Vec<Vec<f32>> = Vec::new();
-    let mut new_template: Vec<f32>;
-    for i in m..data.len() + 1 {
-        new_template = Vec::new();
-        for j in (i - m)..i {
-            new_template.push(data[j]);
-        }
-        templates.push(new_template);
-    }
-    return templates;
+fn construct_templates(window_size: usize, ts_data: &Vec<f32>) -> Vec<Vec<f32>> {
+    let num_windows = ts_data.len() - window_size + 1;
+    return (0..num_windows)
+        .map(|x| ts_data[x..x + window_size].to_vec())
+        .collect::<Vec<Vec<f32>>>();
 }
 
 /// Gets the number of matches for a vector of templates.
