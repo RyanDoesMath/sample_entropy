@@ -23,7 +23,7 @@ fn construct_templates(window_size: usize, ts_data: &Vec<f32>) -> Vec<Vec<f32>> 
 /// * `templates` - an immutable reference to the a vector containing all templates.
 /// * `threshold` - the distance threshold over which a match does not occur.
 ///
-fn get_matches(templates: &Vec<Vec<f32>>, threshold: &f32) -> usize {
+fn get_matches(templates: &[Vec<f32>], threshold: &f32) -> usize {
     templates
         .iter()
         .combinations(2)
