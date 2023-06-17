@@ -14,8 +14,9 @@ fn construct_templates(window_size: usize, ts_data: &Vec<f32>) -> Vec<Vec<f32>> 
         .collect::<Vec<Vec<f32>>>()
 }
 
-/// Returns the number of unique pairs of template vectors where the chebyshev
-/// distance between each pair of vectors is less than the given threshold.
+/// Returns 2 times the number of unique pairs of template vectors where the
+/// chebyshev distance between each pair of vectors is less than the given
+/// threshold.
 ///
 /// # Arguments
 ///
