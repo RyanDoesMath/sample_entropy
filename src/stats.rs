@@ -73,12 +73,12 @@ pub fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
 }
 
 /// Vectorized one liner for computing the mean of a vector.
-pub fn mean(data: &Vec<f32>) -> f32 {
+pub fn mean(data: &[f32]) -> f32 {
     data.iter().sum::<f32>() / data.len() as f32
 }
 
 /// Vectorized read-only code that computes standard deviation.
-pub fn standard_deviation(data: &Vec<f32>) -> f32 {
+pub fn standard_deviation(data: &[f32]) -> f32 {
     let xbar: f32 = mean(data);
     let squared_err: Vec<f32> = data.iter().map(|x| (x - xbar).powf(2.0)).collect();
     return ((squared_err.iter().sum::<f32>()) / (data.len() as f32)).sqrt();
