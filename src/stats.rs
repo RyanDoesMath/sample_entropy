@@ -142,7 +142,15 @@ mod tests {
 
     #[test]
     fn test_constuct_templates_2() {
-        let expected: Vec<Vec<f32>> = vec![vec![1_f32, 2_f32], vec![2f32, 3_f32], vec![3_f32, 4f32], vec![4_f32, 5_f32]];
-        assert_eq!(expected, construct_templates(2, &vec![1_f32, 2_f32, 3_f32, 4_f32, 5_f32]));
+        let expected: Vec<Vec<f32>> = vec![
+            vec![1_f32, 2_f32],
+            vec![2f32, 3_f32],
+            vec![3_f32, 4f32],
+            vec![4_f32, 5_f32],
+        ];
+        assert_eq!(
+            expected,
+            construct_templates(2, &vec![1_f32, 2_f32, 3_f32, 4_f32, 5_f32])
+        );
     }
 }
