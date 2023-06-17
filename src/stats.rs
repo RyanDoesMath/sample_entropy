@@ -17,14 +17,14 @@ fn construct_templates(window_size: usize, ts_data: &Vec<f32>) -> Vec<Vec<f32>> 
 /// # Arguments
 ///
 /// * `templates` - an immutable reference to the a vector containing all templates.
-/// * `r` - the distance threshold over which a match does not occur.
+/// * `threshold` - the distance threshold over which a match does not occur.
 ///
-fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
+fn get_matches(templates: &Vec<Vec<f32>>, threshold: &f32) -> u32 {
     let mut matches: u32 = 0;
 
     for i in 0..templates.len() {
         for j in i + 1..templates.len() {
-            if is_match(&templates[i], &templates[j], r) {
+            if is_match(&templates[i], &templates[j], &threshold) {
                 matches += 1;
             }
         }
