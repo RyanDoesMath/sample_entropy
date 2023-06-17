@@ -62,9 +62,9 @@ fn compute_sampen_for_vital_file(m: usize, vitalf: &VitalFile) -> VitalEntropies
 
     return VitalEntropies {
         name: vitalf.name.clone(),
-        sbp_sampen: sbp_sampen,
-        mbp_sampen: mbp_sampen,
-        dbp_sampen: dbp_sampen,
+        sbp_sampen,
+        mbp_sampen,
+        dbp_sampen,
     };
 }
 
