@@ -33,7 +33,7 @@ fn get_matches(templates: &[Vec<f32>], threshold: &f32) -> usize {
             }
         }
     }
-    (matches * 2).try_into().unwrap()
+    matches.try_into().unwrap()
 }
 
 /// Determines if two templates match.
