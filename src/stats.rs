@@ -73,15 +73,17 @@ pub fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
 }
 
 /// Vectorized one liner for computing the mean of a vector.
-pub fn mean(data: &Vec<f32>) -> f32 {
+pub fn mean(data: &[f32]) -> f32 {
     data.iter().sum::<f32>() / data.len() as f32
 }
 
 /// Vectorized read-only code that computes standard deviation.
-pub fn standard_deviation(data: &Vec<f32>) -> f32 {
+pub fn standard_deviation(data: &[f32]) -> f32 {
     let xbar: f32 = mean(data);
-    let squared_err: Vec<f32> = data.iter().map(|x| (x - xbar).powf(2.0)).collect();
-    return ((squared_err.iter().sum::<f32>()) / (data.len() as f32)).sqrt();
+    let squared_err_sum: f32 = data
+        .iter()
+        .fold(0_f32, |acc, x| acc + ((x - xbar).powf(2.0)));
+    (squared_err_sum / (data.len() as f32)).sqrt()
 }
 
 /// Detrends the data via a linear detrending.
@@ -95,39 +97,31 @@ pub fn standard_deviation(data: &Vec<f32>) -> f32 {
 /// be useful to speed the program up, but honestly it is already fairly fast.
 ///
 /// # Arguments
-/// `data` - a mutable reference to the waveform data.
+/// `data` - an immutable vector slice of waveform data.
 ///
-pub fn detrend_data(data: Vec<f32>) -> Vec<f32> {
-    let xbar: f32 = ((data.len() as f32) + 1.0) / 2.0;
-    let ybar: f32 = mean(&data);
+pub fn detrend_data(data: &[f32]) -> Vec<f32> {
+    let xbar: f32 = (data.len() + 1) as f32 / 2.0;
+    let ybar: f32 = mean(data);
     // beta hat is the estimate of the slope parameter.
     let beta_hat: f32 = {
-        let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
-        let numerator: f32 = data_enum
-            .iter()
-            .map(|(x, y)| ((*x as f32) + 1.0 - xbar) * (*y - ybar))
-            .collect::<Vec<_>>()
-            .into_iter()
-            .sum::<f32>();
-        let denominator: f32 = data_enum
-            .iter()
-            .map(|(x, _y)| ((*x as f32) + 1.0 - xbar).powf(2.0))
-            .collect::<Vec<_>>()
-            .into_iter()
-            .sum::<f32>();
+        let (numerator, denominator): (f32, f32) =
+            data.iter()
+                .enumerate()
+                .fold((0_f32, 0_f32), |acc, (index, value)| {
+                    let temp = (index + 1) as f32 - xbar;
+                    let num_acc = acc.0 + (temp * (value - ybar));
+                    let den_acc = acc.1 + (temp.powf(2.0));
+                    (num_acc, den_acc)
+                });
         numerator / denominator
     };
     // alpha hat is the estimate of the intercept parameter.
     let alpha_hat: f32 = ybar - beta_hat * xbar;
 
-    let detrended_data = {
-        let data_enum = &data.iter().enumerate().collect::<Vec<_>>();
-        data_enum
-            .iter()
-            .map(|(ix, val)| *val - alpha_hat - (beta_hat * ((*ix as f32) + 1.0)))
-            .collect::<Vec<f32>>()
-    };
-    detrended_data
+    data.iter()
+        .enumerate()
+        .map(|(ix, val)| val - alpha_hat - (beta_hat * ((ix as f32) + 1.0)))
+        .collect::<Vec<f32>>()
 }
 
 #[cfg(test)]
