@@ -24,12 +24,16 @@ fn construct_templates(window_size: usize, ts_data: &Vec<f32>) -> Vec<Vec<f32>> 
 /// * `threshold` - the distance threshold over which a match does not occur.
 ///
 fn get_matches(templates: &[Vec<f32>], threshold: &f32) -> usize {
-    templates
-        .iter()
-        .combinations(2)
-        .filter(|x| is_match(x[0], x[1], threshold))
-        .count()
-        * 2
+    let mut matches: u32 = 0;
+
+    for i in 0..templates.len() {
+        for j in i + 1..templates.len() {
+            if is_match(&templates[i], &templates[j], &threshold) {
+                matches += 1;
+            }
+        }
+    }
+    (matches * 2).try_into().unwrap()
 }
 
 /// Determines if two templates match.
