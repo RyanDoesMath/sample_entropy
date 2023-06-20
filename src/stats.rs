@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 /// Constructs the template vectors for a given time series.
 ///
 /// # Arguments
@@ -32,7 +30,7 @@ fn get_matches(templates: &[Vec<f32>], threshold: &f32) -> usize {
 
     for i in 0..templates.len() {
         for j in i + 1..templates.len() {
-            if is_match(&templates[i], &templates[j], &threshold) {
+            if is_match(&templates[i], &templates[j], threshold) {
                 matches += 1;
             }
         }
