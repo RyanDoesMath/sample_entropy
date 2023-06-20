@@ -2,10 +2,12 @@ use glob::glob;
 use indicatif::{ParallelProgressIterator, ProgressBar};
 use rayon::prelude::*;
 use std::error::Error;
-use std::fs::File;
-use std::io::Write;
 use std::time::Instant;
 mod stats;
+mod vital_entropies;
+use csv::Writer;
+
+use vital_entropies::VitalEntropies;
 
 fn main() -> std::io::Result<()> {
     let glob_pattern: String = String::from("D:/datasets/vitaldb_individual_csvs/*.csv");
@@ -26,15 +28,12 @@ fn main() -> std::io::Result<()> {
     println!("Sample entropy computation finished in: {:?}", duration);
 
     println!("Saving to csv...");
-    let entropy_csv: String = {
-        sample_entropies
-            .iter()
-            .map(vital_entropy_to_csv_line)
-            .collect::<Vec<String>>()
-            .join("")
-    };
-    let mut file = File::create("vitaldb_entropies_rust.csv")?;
-    write!(file, "{}", entropy_csv)?;
+    let mut writer = Writer::from_path("vitaldb_entropies_rust.csv")?;
+    for element in sample_entropies.iter() {
+        writer.serialize(element)?;
+    }
+    writer.flush()?;
+
     Ok(())
 }
 
@@ -44,14 +43,6 @@ pub struct VitalFile {
     sbp: Vec<f32>,
     mbp: Vec<f32>,
     dbp: Vec<f32>,
-}
-
-/// Struct to store the name along with the entropy values.
-pub struct VitalEntropies {
-    name: String,
-    sbp_sampen: f32,
-    mbp_sampen: f32,
-    dbp_sampen: f32,
 }
 
 /// Computes sample entropy for a single VitalFile struct.
@@ -72,19 +63,6 @@ fn compute_sampen_for_wave(m: usize, data: Vec<f32>) -> f32 {
     let stdev: f32 = stats::standard_deviation(&data);
     let r: f32 = stdev * 0.2;
     stats::sample_entropy(m, r, &data)
-}
-
-fn vital_entropy_to_csv_line(ve: &VitalEntropies) -> String {
-    let comma: String = String::from(", ");
-    let newline: String = String::from("\n");
-
-    let mut line: String = ve.name.clone();
-    line = line + &comma;
-    line = line + &ve.sbp_sampen.to_string() + &comma;
-    line = line + &ve.mbp_sampen.to_string() + &comma;
-    line = line + &ve.dbp_sampen.to_string() + &newline;
-
-    line
 }
 
 /// Reads waveform data from a file into a vector.
