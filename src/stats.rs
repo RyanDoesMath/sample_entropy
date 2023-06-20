@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 /// Constructs the template vectors for a given time series.
 ///
 /// # Arguments
@@ -12,24 +14,22 @@ fn construct_templates(window_size: usize, ts_data: &Vec<f32>) -> Vec<Vec<f32>> 
         .collect::<Vec<Vec<f32>>>()
 }
 
-/// Gets the number of matches for a vector of templates.
+/// Returns 2 times the number of unique pairs of template vectors where the
+/// chebyshev distance between each pair of vectors is less than the given
+/// threshold.
 ///
 /// # Arguments
 ///
 /// * `templates` - an immutable reference to the a vector containing all templates.
-/// * `r` - the distance threshold over which a match does not occur.
+/// * `threshold` - the distance threshold over which a match does not occur.
 ///
-fn get_matches(templates: &Vec<Vec<f32>>, r: &f32) -> u32 {
-    let mut matches: u32 = 0;
-
-    for i in 0..templates.len() {
-        for j in i + 1..templates.len() {
-            if is_match(&templates[i], &templates[j], r) {
-                matches += 1;
-            }
-        }
-    }
-    matches * 2
+fn get_matches(templates: &[Vec<f32>], threshold: &f32) -> usize {
+    templates
+        .iter()
+        .combinations(2)
+        .filter(|x| is_match(x[0], x[1], threshold))
+        .count()
+        * 2
 }
 
 /// Determines if two templates match.
