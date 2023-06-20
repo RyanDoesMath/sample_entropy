@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 /// Constructs the template vectors for a given time series.
 ///
 /// # Arguments
@@ -14,9 +12,13 @@ fn construct_templates(window_size: usize, ts_data: &Vec<f32>) -> Vec<Vec<f32>> 
         .collect::<Vec<Vec<f32>>>()
 }
 
-/// Returns 2 times the number of unique pairs of template vectors where the
+/// Returns the number of unique pairs of template vectors where the
 /// chebyshev distance between each pair of vectors is less than the given
 /// threshold.
+///
+/// This function technically returns exactly half the matches, but since
+/// sample entropy is -ln(A/B), it doesn't matter if we divide both A and B
+/// by two.
 ///
 /// # Arguments
 ///
@@ -24,12 +26,16 @@ fn construct_templates(window_size: usize, ts_data: &Vec<f32>) -> Vec<Vec<f32>> 
 /// * `threshold` - the distance threshold over which a match does not occur.
 ///
 fn get_matches(templates: &[Vec<f32>], threshold: &f32) -> usize {
-    templates
-        .iter()
-        .combinations(2)
-        .filter(|x| is_match(x[0], x[1], threshold))
-        .count()
-        * 2
+    let mut matches: u32 = 0;
+
+    for i in 0..templates.len() {
+        for j in i + 1..templates.len() {
+            if is_match(&templates[i], &templates[j], threshold) {
+                matches += 1;
+            }
+        }
+    }
+    matches.try_into().unwrap()
 }
 
 /// Determines if two templates match.
