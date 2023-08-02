@@ -3,6 +3,7 @@ use indicatif::{ParallelProgressIterator, ProgressBar};
 use rayon::prelude::*;
 use std::error::Error;
 use std::time::Instant;
+use std::env;
 mod stats;
 mod vital_entropies;
 use csv::Writer;
@@ -13,7 +14,10 @@ fn main() -> std::io::Result<()> {
     let glob_pattern: String = String::from("D:/datasets/vitaldb_individual_csvs/*.csv");
     println!("Reading vital files...");
     let vital_files = read_glob_into_vitalfiles(&glob_pattern);
-    const M: usize = 2;
+
+    let args: Vec<String> = env::args().collect();
+    let m: usize = args[1].parse::<usize>().unwrap();
+    let r: f32 = args[2].parse::<f32>().unwrap();
 
     println!("Computing sample entropy...");
     let start = Instant::now();
@@ -21,14 +25,14 @@ fn main() -> std::io::Result<()> {
         vital_files
             .par_iter()
             .progress()
-            .map(|vf| compute_sampen_for_vital_file(M, vf))
+            .map(|vf| compute_sampen_for_vital_file(m, r, vf))
             .collect::<Vec<VitalEntropies>>()
     };
     let duration = start.elapsed();
     println!("Sample entropy computation finished in: {:?}", duration);
 
     println!("Saving to csv...");
-    let mut writer = Writer::from_path("vitaldb_entropies_rust.csv")?;
+    let mut writer = Writer::from_path(format!("vitaldb_entropies_rust_{M}_{R}.csv", M=m, R=r))?;
     for element in sample_entropies.iter() {
         writer.serialize(element)?;
     }
@@ -46,10 +50,10 @@ pub struct VitalFile {
 }
 
 /// Computes sample entropy for a single VitalFile struct.
-fn compute_sampen_for_vital_file(m: usize, vitalf: &VitalFile) -> VitalEntropies {
-    let sbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(&vitalf.sbp));
-    let mbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(&vitalf.mbp));
-    let dbp_sampen: f32 = compute_sampen_for_wave(m, stats::detrend_data(&vitalf.dbp));
+fn compute_sampen_for_vital_file(m: usize, r: f32, vitalf: &VitalFile) -> VitalEntropies {
+    let sbp_sampen: f32 = compute_sampen_for_wave(m, r, stats::detrend_data(&vitalf.sbp));
+    let mbp_sampen: f32 = compute_sampen_for_wave(m, r, stats::detrend_data(&vitalf.mbp));
+    let dbp_sampen: f32 = compute_sampen_for_wave(m, r, stats::detrend_data(&vitalf.dbp));
 
     VitalEntropies {
         name: vitalf.name.clone(),
@@ -59,9 +63,9 @@ fn compute_sampen_for_vital_file(m: usize, vitalf: &VitalFile) -> VitalEntropies
     }
 }
 
-fn compute_sampen_for_wave(m: usize, data: Vec<f32>) -> f32 {
+fn compute_sampen_for_wave(m: usize, r: f32, data: Vec<f32>) -> f32 {
     let stdev: f32 = stats::standard_deviation(&data);
-    let r: f32 = stdev * 0.2;
+    let r: f32 = stdev * r;
     stats::sample_entropy(m, r, &data)
 }
 

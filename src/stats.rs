@@ -68,6 +68,9 @@ fn is_match(vec_1: &[f32], vec_2: &Vec<f32>, r: &f32) -> bool {
 /// * `data` - a vector containing the waveform data.
 ///
 pub fn sample_entropy(m: usize, r: f32, data: &Vec<f32>) -> f32 {
+    if data.len() <= m {
+        return f32::NAN
+    }
     let templates_size_m: Vec<Vec<f32>> = construct_templates(m, data);
     let m_plus_one = m + 1;
     let templates_size_m_plus_1: Vec<Vec<f32>> = construct_templates(m_plus_one, data);
