@@ -239,4 +239,11 @@ mod tests {
             get_matches(&data, &2_f32)
         );
     }
+
+    #[test]
+    fn test_sample_entropy_1() {
+        let data: Vec<f32> = vec![1_f32, 2_f32, 3_f32, 4_f32, 5_f32];
+        let delta: f32 = (0.405465 - sample_entropy(2_usize, 2_f32, &data)).abs();
+        assert!(delta < 0.0001);
+    }
 }
