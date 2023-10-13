@@ -86,7 +86,7 @@ pub fn mean(data: &[f32]) -> f32 {
     data.iter().sum::<f32>() / data.len() as f32
 }
 
-/// Vectorized read-only code that computes standard deviation.
+/// Vectorized read-only code that computes population standard deviation.
 pub fn standard_deviation(data: &[f32]) -> f32 {
     let xbar: f32 = mean(data);
     let squared_err_sum: f32 = data
@@ -181,6 +181,20 @@ mod tests {
         assert_eq!(
             expected,
             detrend_data(&vec![1_f32, 2_f32, 3_f32])
+        );
+    }
+
+    #[test]
+    fn test_is_match_1() {
+        assert!(
+            is_match(&vec![0_f32, 1_f32], &vec![1_f32, 2_f32], &1.5_f32)
+        );
+    }
+
+    #[test]
+    fn test_is_match_2() {
+        assert!(
+            !is_match(&vec![0_f32, 1_f32], &vec![1_f32, 2_f32], &0.5_f32)
         );
     }
 }
