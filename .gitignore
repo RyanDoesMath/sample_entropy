@@ -2,3 +2,4 @@
 Cargo.lock
 vitaldb_entropies_rust.csv
 *.csv
+db.sqlite3

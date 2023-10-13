@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_constuct_templates_1() {
-        let expected: Vec<Vec<f32>> = vec![vec![1_f32], vec![2f32], vec![3_f32]];
+        let expected: Vec<Vec<f32>> = vec![vec![1_f32], vec![2_f32], vec![3_f32]];
         assert_eq!(expected, construct_templates(1, &vec![1_f32, 2_f32, 3_f32]));
     }
 
@@ -154,6 +154,33 @@ mod tests {
         assert_eq!(
             expected,
             construct_templates(2, &vec![1_f32, 2_f32, 3_f32, 4_f32, 5_f32])
+        );
+    }
+
+    #[test]
+    fn test_detrend_data_1() {
+        let expected: Vec<f32> = vec![0_f32, 0_f32, 0_f32];
+        assert_eq!(
+            expected,
+            detrend_data(&vec![-1_f32, 0_f32, 1_f32])
+        );
+    }
+
+    #[test]
+    fn test_detrend_data_2() {
+        let expected: Vec<f32> = vec![0_f32, 0_f32, 0_f32];
+        assert_eq!(
+            expected,
+            detrend_data(&vec![1_f32, 1_f32, 1_f32])
+        );
+    }
+
+    #[test]
+    fn test_detrend_data_3() {
+        let expected: Vec<f32> = vec![0_f32, 0_f32, 0_f32];
+        assert_eq!(
+            expected,
+            detrend_data(&vec![1_f32, 2_f32, 3_f32])
         );
     }
 }
