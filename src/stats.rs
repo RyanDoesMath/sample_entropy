@@ -197,4 +197,46 @@ mod tests {
             !is_match(&vec![0_f32, 1_f32], &vec![1_f32, 2_f32], &0.5_f32)
         );
     }
+
+    #[test]
+    fn test_get_matches_1() {
+        let expected: usize = 3_usize;
+        let data: Vec<Vec<f32>> = vec![
+            vec![0_f32, 1_f32, 2_f32],
+            vec![1_f32, 2_f32, 3_f32],
+            vec![2_f32, 3_f32, 4_f32],
+        ];
+        assert_eq!(
+            expected,
+            get_matches(&data, &2.5_f32)
+        );
+    }
+
+    #[test]
+    fn test_get_matches_2() {
+        let expected: usize = 0_usize;
+        let data: Vec<Vec<f32>> = vec![
+            vec![0_f32, 1_f32, 2_f32],
+            vec![1_f32, 2_f32, 3_f32],
+            vec![2_f32, 3_f32, 4_f32],
+        ];
+        assert_eq!(
+            expected,
+            get_matches(&data, &0.5_f32)
+        );
+    }
+
+    #[test]
+    fn test_get_matches_3() {
+        let expected: usize = 2_usize;
+        let data: Vec<Vec<f32>> = vec![
+            vec![0_f32, 1_f32, 2_f32],
+            vec![1_f32, 2_f32, 3_f32],
+            vec![2_f32, 3_f32, 4_f32],
+        ];
+        assert_eq!(
+            expected,
+            get_matches(&data, &2_f32)
+        );
+    }
 }
